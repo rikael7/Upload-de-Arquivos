@@ -24,7 +24,12 @@ const compressedUpload = multer({
             ".rar",
             ".md",
             ".txt",
-            ".markdown"
+            ".markdown",
+            ".pdf",
+            ".img",
+            ".jpg",
+            ".png",
+            ".jpeg"
         ];
         if (extensoes.includes(
             path.extname(file.originalname).toLowerCase()
