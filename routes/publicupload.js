@@ -36,7 +36,7 @@ const compressedUpload = multer({
         )) {
             return cb(null, true);
         }
-        cb(new Error("Apenas arquivos ZIP ou RAR."));
+        cb(new Error("Apenas arquivos ZIP, RAR, PDF, JPEG, JPG, PNG"));
     }
 });
 
