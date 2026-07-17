@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
     "bcrypt": "^6.0.0",
     "disposable-email-domains-js": "^1.25.0",
     "dotenv": "^17.4.2",

@@ -1,123 +1,93 @@
+require('dotenv').config();
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
+const supabase = require("../config/supabase.js");
+
 
 const router = express.Router();
-
-
-// upload markdown
-const markdownStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "./uploads/mk");
-    },
-    filename: (req, file, cb) => {
-        const nome = Date.now() + "-" + file.originalname;
-        cb(null, name);
-    }
-});
-
-const markdownUpload = multer({
-    storage: markdownStorage,
-    fileFilter: (req, file, cb) => {
-
-        const extensoes = [".md", ".markdown"];
-
-        if (extensoes.includes(path.extname(file.originalname).toLowerCase())) {
-            return cb(null, true);
-        }
-
-        cb(new Error("Apenas arquivos Markdown."));
-    }
-});
-
-router.post(
-    "/upload/mk",
-    markdownUpload.single("arquivo"),
-    (req, res) => {
-
-        res.json({
-            sucesso: true,
-            arquivo: req.file.filename
-        });
-
-    }
-);
 // ==============
 
 
-//  Upload
-const compressedStorage = multer.diskStorage({
-    
-
-    destination: (req, file, cb) => {
-        cb(null, "./uploads/zip");
-    },
-    filename: (req, file, cb) => {
-
-        const agora = new Date();
-
-      const nome =
-        `${agora.getFullYear()}-` +
-        `${String(agora.getMonth()+1).padStart(2,'0')}-` +
-        `${String(agora.getDate()).padStart(2,'0')}_` +
-        `${String(agora.getHours()).padStart(2,'0')}-` +
-        `${String(agora.getMinutes()).padStart(2,'0')}-` +
-        `${String(agora.getSeconds()).padStart(2,'0')}_` +
-        `${file.originalname}`;
-      cb(null, nome);
-    }
-});
-
+//supabase upload zip
 const compressedUpload = multer({
-    storage: compressedStorage,
 
-       limits: {
+    storage: multer.memoryStorage(),
+
+    limits: {
         fileSize: 100 * 1024 * 1024 // 100 MB
     },
-
     fileFilter: (req, file, cb) => {
 
         const extensoes = [
             ".zip",
-            ".rar"
+            ".rar",
+            ".md",
+            ".txt",
+            ".markdown"
         ];
-
-        if (extensoes.includes(path.extname(file.originalname).toLowerCase())) {
+        if (extensoes.includes(
+            path.extname(file.originalname).toLowerCase()
+        )) {
             return cb(null, true);
         }
-
         cb(new Error("Apenas arquivos ZIP ou RAR."));
     }
 });
 
-router.post("/upload/zip", (req, res) => {
 
-    compressedUpload.single("arquivo")(req, res, function(err){
+router.post(
+"/upload/zip", compressedUpload.single("arquivo"),
+async (req, res) => {
+    try {
+        const agora = new Date();
+        const nomeArquivo =
+            `${agora.getFullYear()}-` +
+            `${String(agora.getMonth()+1).padStart(2,'0')}-` +
+            `${String(agora.getDate()).padStart(2,'0')}_` +
+            `${String(agora.getHours()).padStart(2,'0')}-` +
+            `${String(agora.getMinutes()).padStart(2,'0')}-` +
+            `${String(agora.getSeconds()).padStart(2,'0')}_` +
+            `${req.file.originalname}`;
 
-        if(err){
+        const { data, error } =
+        await supabase.storage
 
-            if(err.code === "LIMIT_FILE_SIZE"){
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: "O arquivo excede o tamanho máximo permitido de 100 MB."
-                });
+        .from("upload")
+        .upload(
+            `zip/${nomeArquivo}`,
+            req.file.buffer,
+            {
+                contentType: req.file.mimetype
             }
+        );
 
-            return res.status(400).json({
-                sucesso: false,
-                erro: err.message
-            });
-
+        if(error){
+            throw error;
         }
 
+        const url =
+        supabase.storage
+        .from("zip")
+        .getPublicUrl(data.path);
 
         res.json({
             sucesso: true,
-            arquivo: req.file.filename
+            arquivo: nomeArquivo,
+            url: url.data.publicUrl
+
         });
 
-    }) //
+    } catch(err) {
+
+        res.status(500).json({
+            sucesso:false,
+            erro:err.message
+        });
+
+    }
 });
+
 
 
 module.exports = router 
