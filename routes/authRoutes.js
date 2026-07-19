@@ -11,10 +11,10 @@ const {
 const router = express.Router();
 const SALT_ROUNDS = 10;
 
-
+//registerValidationRules (tirei o)
 
 // POST /auth/register
-router.post('/register', registerValidationRules,
+router.post('/register', 
   handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password } = req.body;

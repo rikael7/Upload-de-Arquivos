@@ -1,21 +1,24 @@
 const pool = require("../config/dbpg");
 
+
 // ======================================================
 // CONTROLLER ADMIN
 // Upload de vídeo
 // ======================================================
 
 async function uploadVideo(req, res) {
+
     try {
 
         const { titulo, descricao } = req.body;
 
-        // Verifica se recebeu arquivo
+
         if (!req.file) {
             return res.status(400).json({
                 message: "Nenhum vídeo enviado."
             });
         }
+
 
         const video = {
             titulo,
@@ -23,8 +26,9 @@ async function uploadVideo(req, res) {
             nome_arquivo: req.file.filename,
             tipo_arquivo: req.file.mimetype,
             tamanho: req.file.size,
-            usuario_id: req.session.user.id
+            usuario_id: req.session.userId
         };
+
 
         await pool.query(
             `
@@ -49,13 +53,15 @@ async function uploadVideo(req, res) {
             ]
         );
 
+
         return res.status(201).json({
             message: "Vídeo enviado com sucesso."
         });
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error("Erro upload vídeo:", error);
 
         return res.status(500).json({
             message: "Erro ao salvar vídeo."
@@ -64,11 +70,14 @@ async function uploadVideo(req, res) {
     }
 }
 
+
+
 // ======================================================
 // CONTROLLER DE AUTENTICAÇÃO
 // ======================================================
 
-// Buscar usuário por e-mail
+
+// Buscar usuário por email
 async function findUserByEmail(email) {
 
     const result = await pool.query(
@@ -85,8 +94,11 @@ async function findUserByEmail(email) {
         [email]
     );
 
+
     return result.rows[0] || null;
 }
+
+
 
 // Buscar usuário por nome
 async function finduserbyname(name) {
@@ -105,12 +117,16 @@ async function finduserbyname(name) {
         [name]
     );
 
+
     return result.rows[0] || null;
 }
+
+
 
 // ======================================================
 // CONTROLLERS DO USUÁRIO
 // ======================================================
+
 
 // Buscar usuário pelo ID
 async function findUserById(id) {
@@ -133,8 +149,11 @@ async function findUserById(id) {
         [id]
     );
 
+
     return result.rows[0] || null;
 }
+
+
 
 // Criar usuário
 async function createUser({ name, email, passwordHash }) {
@@ -150,14 +169,24 @@ async function createUser({ name, email, passwordHash }) {
         VALUES ($1, $2, $3)
         RETURNING id, name, email
         `,
-        [name, email, passwordHash]
+        [
+            name,
+            email,
+            passwordHash
+        ]
     );
+
 
     return result.rows[0];
 }
 
-// Atualizar perfil do usuário
-async function updateUserProfile(id, { name, bio, phone, avatarUrl }) {
+
+
+// Atualizar perfil
+async function updateUserProfile(
+    id,
+    { name, bio, phone, avatarUrl }
+) {
 
     await pool.query(
         `
@@ -166,7 +195,8 @@ async function updateUserProfile(id, { name, bio, phone, avatarUrl }) {
             name = $1,
             bio = $2,
             phone = $3,
-            avatar_url = $4
+            avatar_url = $4,
+            updated_at = NOW()
         WHERE id = $5
         `,
         [
@@ -178,8 +208,11 @@ async function updateUserProfile(id, { name, bio, phone, avatarUrl }) {
         ]
     );
 
+
     return findUserById(id);
 }
+
+
 
 module.exports = {
     uploadVideo,
@@ -189,11 +222,6 @@ module.exports = {
     createUser,
     updateUserProfile
 };
-
-
-
-
-
 
 
 

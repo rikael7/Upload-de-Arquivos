@@ -46,7 +46,8 @@ app.use(
     session({
         store: new pgSession({
             pool: pool,
-            tableName: 'sessions'
+            tableName: 'sessions',
+            createTableIfMissing: true
         }),
 
         key: 'connect.sid',

@@ -3,28 +3,32 @@ const { body, validationResult } = require('express-validator');
 const dns = require('dns').promises;
 
 //biblioteca para bloquear email temporário
-const disposableDomains = require('disposable-email-domains-js');
+const { isDisposableEmail } = require('disposable-email-domains-js');
+
+console.log(isDisposableEmail);
 
 // funções
 // função valida dominio do email (verifica se o domínio tem registro MX)
-async function domainExists(email) {
-    const domain = email.split('@')[1];
+// async function domainExists(email) {
+//     const domain = email.split('@')[1];
 
-    try {
-        const mx = await dns.resolveMx(domain);
+//     try {
+//         const mx = await dns.resolveMx(domain);
 
-        if (mx.length > 0) {
-            return true;
-        }
-    } catch {}
+//         if (mx.length > 0) {
+//             return true;
+//         }
+//     } catch {}
 
-    try {
-        await dns.resolve4(domain);
-        return true;
-    } catch {}
+//     try {
+//         await dns.resolve4(domain);
+//         return true;
+//     } catch {}
 
-    return false;
-}
+//     return false;
+// }
+
+
 // e interrompe a requisição com 400 se houver erro.
 function handleValidationErrors(req, res, next) {
   const errors = validationResult(req);
