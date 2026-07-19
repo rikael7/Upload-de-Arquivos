@@ -12,7 +12,7 @@ const router = express.Router();
 
 //        IMPORTAR  PARA SUPORTAR TRANSPORTE DE ARQUIVOS
 const multer = require('multer');
-const pool = require('../config/db'); // ajuste para o caminho real do seu módulo de conexão
+const pool = require('../config/dbpg'); // ajuste para o caminho real do seu módulo de conexão
 const crypto = require('crypto');
 const fs = require('fs'); // biblioteca para transições de arquivos 
 
