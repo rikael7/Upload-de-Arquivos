@@ -11,10 +11,10 @@ const {
 const router = express.Router();
 const SALT_ROUNDS = 10;
 
-//registerValidationRules (tirei o)
+// (tirei o)
 
 // POST /auth/register
-router.post('/register', 
+router.post('/register', registerValidationRules,
   handleValidationErrors, async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -26,10 +26,10 @@ router.post('/register',
       return res.status(409).json({ error: 'Este email já está cadastrado.' });
     }
 
-      const existingname = await finduserbyname(name);
-    if (existingname) {
-      return res.status(409).json({ error: 'Este nome já está em uso.' });
-    }
+    //   const existingname = await finduserbyname(name);
+    // if (existingname) {
+    //   return res.status(409).json({ error: 'Este nome já está em uso.' });
+    // }
 
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -76,6 +76,8 @@ router.post('/login', loginValidationRules,
       }
 
       req.session.userId = user.id;
+
+     
 
       return res.status(200).json({
         message: 'Login realizado com sucesso.',

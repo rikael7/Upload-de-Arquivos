@@ -28,4 +28,6 @@ pool.on("error", (err) => {
 });
 
 
+
+// antes do websocket
 module.exports = pool;

@@ -131,6 +131,8 @@ router.get('/profile', isAuthenticated, async (req, res) => {
     return res.status(500).json({ error: 'Erro interno.' });
   }
 });
+
+
 // api streaming de vídeo
 router.get('/stream/:video', isAuthenticated, (req, res) => {
     const videoPath = path.join(

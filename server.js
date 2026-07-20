@@ -1,13 +1,24 @@
 require('dotenv').config();
 
+
+// // ============
+//  Modulos
+// ============
 const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const { Pool } = require('pg');
 
+// // ============
+//  Middleware
+// ============
 const { sanitizeBody } = require('./middleware/sanitize');
 const { isAuthenticated } = require('./middleware/authMiddleware');
 
+
+// // ============
+//  rotas
+// ============
 const authRoutes = require('./routes/authRoutes');
 const publicupload = require('./routes/publicupload');
 const protectedRoutes = require('./routes/protectedRoutes');
@@ -17,8 +28,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// =================
+// websocket
+// =============
 
+// ============
+
+
+// ============
 // PostgreSQL pool
+// ============
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -26,8 +45,9 @@ const pool = new Pool({
     }
 });
 
-
-// Middlewares
+// ============
+// limit
+// ============
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ 
     extended: true, 
@@ -36,12 +56,14 @@ app.use(express.urlencoded({
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-
+// ============
 // Sanitização
+// ============
 app.use(sanitizeBody);
 
-
+// ============
 // Sessões PostgreSQL
+// ============
 app.use(
     session({
         store: new pgSession({
@@ -49,39 +71,36 @@ app.use(
             tableName: 'sessions',
             createTableIfMissing: true
         }),
-
         key: 'connect.sid',
-
         secret: process.env.SESSION_SECRET,
-
         resave: false,
-
         saveUninitialized: false,
-
         cookie: {
             httpOnly: true,
-
             secure: process.env.NODE_ENV === 'production',
-
             maxAge: 1000 * 60 * 60 * 24 // 1 dia
         }
     })
 );
 
-
+// ============
 // FRONT END PRIVADO
-
-app.get('/', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'inicial.html'));
-});
+// ============
+// app.get('/', isAuthenticated, (req, res) => {
+//     res.sendFile(path.join(__dirname, 'views', 'inicial.html'));
+// });
 
 
 app.get('/streaming', isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'streaming.html'));
 });
 
-
+// ============
 // FRONT END PÚBLICO
+// ============
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'ws.html'));
+}); 
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'login.html'));
@@ -98,9 +117,9 @@ app.get('/register', (req, res) => {
 });
 
 
-
+// ============
 // ROTAS API
-
+// ============
 app.use('/auth', authRoutes);
 
 app.use('/api', publicupload);
@@ -110,8 +129,9 @@ app.use('/api', protectedRoutes);
 app.use('/api/profile', protectedRoutes);
 
 
-
+// ============
 // Erro genérico
+// ============
 app.use((err, req, res, next) => {
     console.error('Erro não tratado:', err);
 
@@ -119,6 +139,10 @@ app.use((err, req, res, next) => {
         error: 'Erro interno do servidor.'
     });
 });
+
+
+
+
 
 
 

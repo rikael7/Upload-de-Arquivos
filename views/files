@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<title>Gerenciador de Arquivos</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#f1f5f9;
+    padding:30px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+}
+
+button{
+    padding:10px 15px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+input{
+    padding:10px;
+}
+
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+}
+
+a{
+    color:#2563eb;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>Arquivos</h1>
+
+
+<h3>Upload</h3>
+
+<input 
+type="file"
+id="arquivo">
+
+
+<button onclick="uploadArquivo()">
+Enviar
+</button>
+
+
+
+<h3>Lista de arquivos</h3>
+
+
+<button onclick="listarArquivos()">
+Atualizar
+</button>
+
+
+
+<table>
+
+<thead>
+
+<tr>
+<th>Nome</th>
+<th>Tamanho</th>
+<th>Tipo</th>
+<th>Ação</th>
+</tr>
+
+</thead>
+
+
+<tbody id="listaArquivos">
+
+</tbody>
+
+
+</table>
+
+
+
+</div>
+
+
+
+
+<script>
+
+
+const API = "http://localhost:3000/api";
+
+
+// pasta dentro do bucket
+const pasta = "zip";
+
+
+
+
+
+async function listarArquivos(){
+
+
+    const resposta = await fetch(
+        `${API}/arquivos/${pasta}`
+    );
+
+
+    const arquivos = await resposta.json();
+
+
+    const tabela =
+    document.getElementById(
+        "listaArquivos"
+    );
+
+
+    tabela.innerHTML="";
+
+
+
+    arquivos.forEach(arquivo=>{
+
+
+        tabela.innerHTML += `
+
+        <tr>
+
+            <td>
+                ${arquivo.nome}
+            </td>
+
+
+            <td>
+                ${formatarTamanho(
+                    arquivo.tamanho
+                )}
+            </td>
+
+
+            <td>
+                ${arquivo.tipo ?? "-"}
+            </td>
+
+
+            <td>
+
+                <a 
+                href="${arquivo.url}"
+                target="_blank">
+
+                Baixar
+
+                </a>
+
+            </td>
+
+
+        </tr>
+
+        `;
+
+
+    });
+
+
+}
+
+
+
+
+
+
+async function uploadArquivo(){
+
+
+    const input =
+    document.getElementById(
+        "arquivo"
+    );
+
+
+    const arquivo =
+    input.files[0];
+
+
+    if(!arquivo){
+
+        alert(
+            "Selecione um arquivo"
+        );
+
+        return;
+
+    }
+
+
+
+    const formData =
+    new FormData();
+
+
+    formData.append(
+        "arquivo",
+        arquivo
+    );
+
+
+
+    const resposta =
+    await fetch(
+        `${API}/upload/zip`,
+        {
+
+        method:"POST",
+
+        body:formData
+
+        }
+    );
+
+
+
+    const resultado =
+    await resposta.json();
+
+
+
+    if(resultado.sucesso){
+
+        alert(
+            "Upload realizado"
+        );
+
+
+        listarArquivos();
+
+    }
+    else{
+
+        alert(
+            resultado.erro
+        );
+
+    }
+
+
+}
+
+
+
+
+
+function formatarTamanho(bytes){
+
+
+    if(!bytes)
+        return "-";
+
+
+    let tamanho = bytes;
+
+    let unidade="Bytes";
+
+
+    if(tamanho > 1024){
+
+        tamanho/=1024;
+        unidade="KB";
+
+    }
+
+
+    if(tamanho > 1024){
+
+        tamanho/=1024;
+        unidade="MB";
+
+    }
+
+
+    return tamanho.toFixed(2)+" "+unidade;
+
+
+}
+
+
+
+
+
+listarArquivos();
+
+
+</script>
+
+
+</body>
+
+</html>

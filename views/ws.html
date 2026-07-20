@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Gerenciador de Arquivos</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f1f5f9;
+    padding:30px;
+}
+
+.meio {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 10px;
+    font-weight: 600;
+}
+
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+}
+
+
+h1{
+    text-align:center;
+}
+
+
+input{
+    padding:10px;
+}
+
+
+button{
+
+    padding:10px 15px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+
+}
+
+
+button:hover{
+
+    background:#1d4ed8;
+
+}
+
+
+table{
+
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+
+}
+
+
+th,td{
+
+    padding:12px;
+    border-bottom:1px solid #ddd;
+
+}
+
+
+a{
+
+    color:#2563eb;
+    text-decoration:none;
+
+}
+
+
+a:hover{
+
+    text-decoration:underline;
+
+}
+
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1>Gerenciador de Arquivos</h1>
+
+
+<h3>Enviar arquivo</h3>
+
+
+<input 
+type="file"
+id="arquivo">
+
+
+<button onclick="uploadArquivo()">
+Enviar
+</button>
+
+
+
+<h3>Arquivos disponíveis</h3>
+
+
+<button onclick="listarArquivos()">
+Atualizar lista
+</button>
+
+
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Nome</th>
+<th>Tamanho</th>
+<th>Tipo</th>
+<th>Download</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="lista">
+
+</tbody>
+
+
+</table>
+
+<p class="meio">Desenvolvido por Rikael</p>
+
+</div>
+
+
+
+<script>
+
+
+// endereço do backend
+const API = "http://localhost:3000/api";
+
+
+// pasta dentro do bucket "arquivos"
+const pasta = "zip";
+
+
+
+
+
+async function listarArquivos(){
+
+
+    try{
+
+
+        const resposta = await fetch(
+            `${API}/arquivos/${pasta}`
+        );
+
+
+        const arquivos = await resposta.json();
+
+
+
+        const tabela =
+        document.getElementById("lista");
+
+
+        tabela.innerHTML = "";
+
+
+
+        arquivos.forEach(arquivo=>{
+
+
+            tabela.innerHTML += `
+
+            <tr>
+
+                <td>
+                    ${arquivo.nome}
+                </td>
+
+
+                <td>
+                    ${formatarTamanho(
+                        arquivo.tamanho
+                    )}
+                </td>
+
+
+                <td>
+                    ${arquivo.tipo ?? "-"}
+                </td>
+
+
+                <td>
+
+                    <a 
+                    href="${arquivo.url}"
+                    target="_blank">
+
+                    Baixar
+
+                    </a>
+
+                </td>
+
+
+            </tr>
+
+            `;
+
+
+        });
+
+
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Erro ao carregar arquivos"
+        );
+
+    }
+
+
+}
+
+
+
+
+
+
+
+async function uploadArquivo(){
+
+
+    const input =
+    document.getElementById("arquivo");
+
+
+    const arquivo =
+    input.files[0];
+
+
+
+    if(!arquivo){
+
+        alert(
+            "Selecione um arquivo"
+        );
+
+        return;
+
+    }
+
+
+
+    const formData =
+    new FormData();
+
+
+
+    formData.append(
+        "arquivo",
+        arquivo
+    );
+
+
+
+    try{
+
+
+        const resposta =
+        await fetch(
+            `${API}/upload/zip`,
+            {
+
+            method:"POST",
+
+            body:formData
+
+            }
+        );
+
+
+
+        const resultado =
+        await resposta.json();
+
+
+
+        if(resultado.sucesso){
+
+
+            alert(
+                "Upload concluído"
+            );
+
+
+            listarArquivos();
+
+
+        }else{
+
+
+            alert(
+                resultado.erro
+            );
+
+
+        }
+
+
+
+    }catch(error){
+
+
+        console.error(error);
+
+
+        alert(
+            "Erro no upload"
+        );
+
+
+    }
+
+
+}
+
+
+
+
+
+
+function formatarTamanho(bytes){
+
+
+    if(!bytes){
+
+        return "-";
+
+    }
+
+
+
+    const unidades = [
+        "Bytes",
+        "KB",
+        "MB",
+        "GB"
+    ];
+
+
+
+    let tamanho = bytes;
+    let indice = 0;
+
+
+
+    while(
+        tamanho >= 1024 &&
+        indice < unidades.length - 1
+    ){
+
+        tamanho /= 1024;
+        indice++;
+
+    }
+
+
+
+    return `${tamanho.toFixed(2)} ${unidades[indice]}`;
+
+
+}
+
+
+
+
+
+// carrega automaticamente ao abrir
+listarArquivos();
+
+
+</script>
+
+
+</body>
+
+</html>

@@ -9,6 +9,134 @@ const router = express.Router();
 // ==============
 
 
+//supabase download
+router.get('/arquivo/:nome', async (req, res) => {
+
+    const nomeArquivo = req.params.nome;
+
+    try {
+
+        const { data, error } = await supabase
+            .storage
+            .from('upload')
+            .download(nomeArquivo);
+
+
+        if(error){
+            return res.status(404).json({
+                erro: "Arquivo não encontrado"
+            });
+        }
+
+
+        const buffer = Buffer.from(
+            await data.arrayBuffer()
+        );
+
+
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${nomeArquivo}"`
+        );
+
+
+        res.setHeader(
+            'Content-Type',
+            data.type || 'application/octet-stream'
+        );
+
+
+        res.send(buffer);
+
+
+    } catch(err){
+
+        console.error(err);
+
+        res.status(500).json({
+            erro:"Erro ao baixar arquivo"
+        });
+
+    }
+
+});
+
+
+// supabase listar arquivos
+router.get('/arquivos/:pasta', async (req, res) => {
+
+    const pasta = req.params.pasta;
+
+    try {
+
+        // Lista arquivos da pasta
+        const { data: arquivos, error } = await supabase
+            .storage
+            .from('upload') // nome do bucket
+            .list(pasta, {
+                limit: 100,
+                offset: 0,
+                sortBy: {
+                    column: 'name',
+                    order: 'asc'
+                }
+            });
+
+
+        if(error){
+            return res.status(500).json({
+                erro: error.message
+            });
+        }
+
+
+        // Gera links temporários
+        const arquivosComLinks = await Promise.all(
+            arquivos.map(async (arquivo) => {
+
+                const caminho = `${pasta}/${arquivo.name}`;
+
+                const { data, error } = await supabase
+                    .storage
+                    .from('upload')
+                    .createSignedUrl(
+                        caminho,
+                        60 * 10 // válido por 10 minutos
+                    );
+
+
+                return {
+                    nome: arquivo.name,
+                    tamanho: arquivo.metadata?.size,
+                    tipo: arquivo.metadata?.mimetype,
+                    criadoEm: arquivo.created_at,
+                    atualizadoEm: arquivo.updated_at,
+                    url: error ? null : data.signedUrl
+                    
+                }; 
+
+            })
+        );
+
+
+        res.json(arquivosComLinks);
+
+
+    } catch(err){
+
+        console.error(err);
+
+        res.status(500).json({
+            erro: "Erro ao buscar arquivos"
+        });
+
+    }
+
+});
+
+
+
+
 //supabase upload zip
 const compressedUpload = multer({
 

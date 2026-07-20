@@ -337,7 +337,7 @@
 
         if (res.ok) {
           showServerMsg('Login realizado com sucesso! Redirecionando...', 'success');
-          window.location.href = data.redirectTo || '/';
+          window.location.href = data.redirectTo || '/upload';
         } else {
           showServerMsg(data.message || 'Credenciais inválidas. Tente novamente.', 'error');
         }
